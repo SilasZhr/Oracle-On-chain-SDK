@@ -22,8 +22,9 @@ interface IJobSpecification {
      * @dev Event emitted when a new job is created
      * @param jobId The unique identifier of the created job
      * @param requester The address of the requester initiating the job
+     * @param description Description of the task to be performed off-chain
      */
-    event JobCreated(bytes32 jobId, address requester);
+    event JobCreated(bytes32 jobId, address requester, bytes description);
 
     /**
      * @dev Event emitted when a job is completed
