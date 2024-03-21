@@ -25,6 +25,10 @@ contract JobSpecification is IJobSpecification, Ownable {
         _;
     }
 
+    constructor(address jobHelperAddress) {
+        _setJobHelper(0, jobHelperAddress); // Initialize with default job helper address
+    }
+
     /**
      * @dev Function to add or update a trusted oracle
      * @param oracle The address of the oracle
@@ -39,8 +43,7 @@ contract JobSpecification is IJobSpecification, Ownable {
     /// @param jobType The job type identifier
     /// @param helper The address of the job helper contract
     function setJobHelper(uint256 jobType, address helper) external onlyOwner {
-        jobHelpers[jobType] = helper;
-        emit JobHelperUpdated(jobType, helper);
+        _setJobHelper(jobType, helper);
     }
 
     function createJob(
@@ -74,5 +77,12 @@ contract JobSpecification is IJobSpecification, Ownable {
 
     function getJob(bytes32 jobId) external view override returns (Job memory job) {
         job = jobs[jobId];
+    /// @dev Function to set a job helper address for a specific job type
+    /// @param jobType The job type identifier
+    /// @param helper The address of the job helper contract
+    
+    function _setJobHelper(uint256 jobType, address helper) internal onlyOwner {
+        jobHelpers[jobType] = helper;
+        emit JobHelperUpdated(jobType, helper);
     }
 }
