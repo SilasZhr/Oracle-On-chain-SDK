@@ -12,6 +12,7 @@ artifacts
 # Foundry files
 foundry-artifacts
 foundry-cache
+out
 
 .metadata
 

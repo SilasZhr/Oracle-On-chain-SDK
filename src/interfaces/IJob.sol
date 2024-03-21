@@ -6,7 +6,6 @@ pragma solidity ^0.8.13;
  * @dev Interface for managing job specifications
  */
 interface IJobSpecification {
-
     /**
      * @dev Struct to represent a job
      */

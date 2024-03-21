@@ -2,8 +2,9 @@
 pragma solidity ^0.8.13;
 
 import {IJobSpecification} from "./interfaces/IJob.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract JobSpecification is IJobSpecification {
+contract JobSpecification is IJobSpecification, Ownable {
     mapping(bytes32 => Job) public jobs;
     mapping(uint256 => address) public jobHelpers; // job helpers for decoding and decoding data if needed
     mapping(address => bool) public trustedOracles;
@@ -29,10 +30,7 @@ contract JobSpecification is IJobSpecification {
      * @param oracle The address of the oracle
      * @param isTrusted Boolean indicating whether the oracle is trusted
      */
-    function setTrustedOracle(
-        address oracle,
-        bool isTrusted
-    ) external onlyOwner {
+    function setTrustedOracle(address oracle, bool isTrusted) external onlyOwner {
         trustedOracles[oracle] = isTrusted;
         emit OracleUpdated(oracle, isTrusted);
     }
@@ -67,10 +65,7 @@ contract JobSpecification is IJobSpecification {
 
     function completeJob(bytes32 jobId) external onlyTrustedOracle {
         require(!jobs[jobId].isCompleted, "Job already completed");
-        require(
-            block.timestamp <= jobs[jobId].deadline,
-            "Job deadline exceeded"
-        );
+        require(block.timestamp <= jobs[jobId].deadline, "Job deadline exceeded");
         // Perform computation and update outputData
         jobs[jobId].outputData = "Computed output data";
         jobs[jobId].isCompleted = true;
