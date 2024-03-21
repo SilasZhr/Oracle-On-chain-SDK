@@ -16,7 +16,7 @@ contract SubscriptionManager is Ownable {
     /// @param jobContractAddress The address of the related JobContract.
     constructor(address jobContractAddress) {
         jobManager = IJobSpecification(jobContractAddress);
-        // Set default prices for each job type
+        // Set default prices for each job type, just for demo
         jobPrices[0] = 0.01 ether;
         jobPrices[1] = 0.02 ether;
         jobPrices[2] = 0.03 ether;
