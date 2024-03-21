@@ -6,13 +6,15 @@ pragma solidity ^0.8.13;
  * @dev Interface for managing job specifications
  */
 interface IJobSpecification {
+
     /**
      * @dev Struct to represent a job
      */
     struct Job {
         bytes32 taskDescriptionHash; // Description of the task to be performed off-chain
+        uint256 jobType; //Job types
         uint256 deadline; // Deadline for completing the job
-        address requester; // Address of the requester/ initiating the job
+        address requester; // Address of the requester / initiating the job
         bool isCompleted; // Flag indicating whether the job is completed
         bytes inputData; // Input data required for the computation
         bytes outputData; // Output data of the computation
@@ -37,12 +39,14 @@ interface IJobSpecification {
      * @dev Function to create a new job
      * @param jobId The unique identifier of the job
      * @param taskDescription Description of the task to be performed off-chain
+     * @param jobType Job types
      * @param inputData Input data required for the computation
      * @param expiration Expiration time for the job
      */
     function createJob(
         bytes32 jobId,
         bytes calldata taskDescription,
+        uint256 jobType,
         bytes memory inputData,
         uint256 expiration
     ) external;
