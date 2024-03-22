@@ -39,7 +39,7 @@ contract SimpleJobHelper is IJobHelper {
   function encodeJobData(
     uint256 _jobType,
     bytes calldata inputData
-  ) external pure override returns (bytes memory outputData) {
+  ) external  override returns (bytes memory outputData) {
     uint256 chunkPtr;
     uint256 dataPtr;
     uint256 blockPtr;
@@ -71,6 +71,7 @@ contract SimpleJobHelper is IJobHelper {
       }
     }
 
+
     // concatenate tx hashes
     uint256 _l2TxPtr = l2TxPtr(chunkPtr, _numBlocks);
     while (_numBlocks > 0) {
@@ -88,22 +89,21 @@ contract SimpleJobHelper is IJobHelper {
           dataPtr := add(dataPtr, 0x20)
         }
       }
-
+  
       unchecked {
         _numBlocks -= 1;
         blockPtr += BLOCK_CONTEXT_LENGTH;
       }
     }
 
-    require(_l2TxPtr - chunkPtr == inputData.length, "incomplete l2 transaction data");
-
     // compute data hash and store to memory
     bytes32 res;
     assembly {
       outputData := mload(0x40)
       mstore(outputData, 0x20)
-      res := keccak256(startDataPtr, sub(dataPtr, startDataPtr))
+      res := keccak256(startDataPtr, add(chunkPtr, inputData.length))
       mstore(add(outputData, 0x20), res)
+      mstore(0x40, add(outputData, 0x40))
     }
 
     return outputData;
