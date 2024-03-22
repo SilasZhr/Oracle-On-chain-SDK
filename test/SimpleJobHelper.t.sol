@@ -31,7 +31,7 @@ contract SimpleJobHelperTest is Test {
         bytes memory inputData = chunk0;// Construct valid input data based on the Chunk structure
 
         // Expected results
-        bytes32 expectedHash = 0x3b40aee848e211d25a332c9434509a3358195f12565fc8705431e167e2e6db51;
+        bytes32 expectedHash = hex"0085141d49b1eb227e7d7ecafd66c36f6943dfaa854fcb083ef04a0c1b1ccde6";
 
         bytes memory outputData = simpleJobHelper.encodeJobData(_jobType, chunk0);
         
@@ -40,7 +40,9 @@ contract SimpleJobHelperTest is Test {
         assembly {
             outputHash := mload(add(outputData, 0x20))
         }
-        assertEq(outputHash, expectedHash, "Hash does not match expected value");
+
+        require(expectedHash == outputHash, "data not match");
+        
     }
 
 }

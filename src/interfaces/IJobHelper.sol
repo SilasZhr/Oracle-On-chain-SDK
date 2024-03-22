@@ -11,7 +11,7 @@ interface IJobHelper {
     function encodeJobData(
         uint256 jobType,
         bytes calldata inputData
-    ) external pure returns (bytes memory);
+    ) external returns (bytes memory);
 
     /// @dev Decodes the job data bytes string back into its original parameters.
     /// @param jobData The encoded job data.

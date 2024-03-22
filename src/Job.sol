@@ -77,10 +77,12 @@ contract JobSpecification is IJobSpecification, Ownable {
 
     function getJob(bytes32 jobId) external view override returns (Job memory job) {
         job = jobs[jobId];
+
+    }
+    
     /// @dev Function to set a job helper address for a specific job type
     /// @param jobType The job type identifier
     /// @param helper The address of the job helper contract
-    
     function _setJobHelper(uint256 jobType, address helper) internal onlyOwner {
         jobHelpers[jobType] = helper;
         emit JobHelperUpdated(jobType, helper);
