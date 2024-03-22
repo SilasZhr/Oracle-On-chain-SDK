@@ -50,7 +50,7 @@ contract SubscriptionManager is Ownable {
     function withdrawPayments() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No funds to withdraw.");
-        (bool success,) = owner().call{value: balance}("");
+        (bool success,) = payable(owner()).call{value: balance}("");
         require(success, "Transfer failed.");
     }
 
