@@ -71,4 +71,8 @@ contract JobSpecification is IJobSpecification, Ownable {
         jobs[jobId].isCompleted = true;
         emit JobCompleted(jobId, keccak256(abi.encode(jobs[jobId].outputData)));
     }
+
+    function getJob(bytes32 jobId) external view override returns (Job memory job) {
+        job = jobs[jobId];
+    }
 }
