@@ -62,4 +62,11 @@ interface IJobSpecification {
    * @return job The Job struct containing the details of the specified job.
    */
   function getJob(bytes32 jobId) external view returns (Job memory job);
+
+  /**
+   * @dev Retrieves the details of a job using its unique identifier.
+   * @param jobId The unique identifier of the job to be retrieved.
+   * @return commitment The commitment containing the commits to the specified job.
+   */
+  function getJobCommitment(bytes32 jobId) external returns (bytes memory commitment); 
 }
