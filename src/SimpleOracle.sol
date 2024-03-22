@@ -4,15 +4,13 @@ pragma solidity ^0.8.0;
 import {IJobSpecification} from "./interfaces/IJob.sol";
 
 contract CustomOracle {
-
     //just for tests
     address public verifier;
-    
+
     IJobSpecification public jobManager;
 
     // Mapping to store proofs for each job ID
     mapping(bytes32 => bytes32) public proofs;
-
 
     // Event emitted when a proof is submitted
     event ProofSubmitted(bytes32 indexed jobId, bytes32 proof);
@@ -29,19 +27,19 @@ contract CustomOracle {
     }
 
     // Function to verify a proof for a specific job ID
-    function verifySignature(bytes32 jobId, bytes memory signature) external  returns (bool) {
-       return _verifySignature(jobId, signature);
+    function verifySignature(bytes32 jobId, bytes memory signature) external returns (bool) {
+        return _verifySignature(jobId, signature);
     }
 
     // Function to verify a proof for a specific job ID
-    function _verifySignature(bytes32 jobId, bytes memory signature) internal  returns (bool) {
+    function _verifySignature(bytes32 jobId, bytes memory signature) internal returns (bool) {
         (uint8 v, bytes32 r, bytes32 s) = _extractRSV(signature);
         bytes memory commitment = jobManager.getJobCommitment(jobId);
         address signer = ecrecover(keccak256(commitment), v, r, s);
         return signer == verifier;
     }
 
-     function _extractRSV(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
+    function _extractRSV(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
         require(signature.length == 65, "Invalid signature length");
 
         assembly {

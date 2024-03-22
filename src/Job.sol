@@ -5,7 +5,6 @@ import {IJobSpecification} from "./interfaces/IJob.sol";
 import {IJobHelper} from "./interfaces/IJobHelper.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 contract JobSpecification is IJobSpecification, Ownable {
     mapping(bytes32 => Job) public jobs;
     mapping(uint256 => address) public jobHelpers; // job helpers for decoding and decoding data if needed
@@ -77,18 +76,16 @@ contract JobSpecification is IJobSpecification, Ownable {
         emit JobCompleted(jobId, keccak256(abi.encode(jobs[jobId].outputData)));
     }
 
-    function getJob(bytes32 jobId) external view  returns (Job memory job) {
+    function getJob(bytes32 jobId) external view returns (Job memory job) {
         job = jobs[jobId];
-
     }
 
     function getJobCommitment(bytes32 jobId) external returns (bytes memory commitment) {
         IJobSpecification.Job memory job = jobs[jobId];
         address helper = jobHelpers[job.jobType];
         if (helper == address(0)) {
-            commitment =  job.inputData;
-        }
-        else {
+            commitment = job.inputData;
+        } else {
             commitment = IJobHelper(helper).encodeJobData(job.jobType, job.inputData);
         }
     }

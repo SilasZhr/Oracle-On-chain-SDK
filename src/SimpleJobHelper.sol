@@ -31,181 +31,184 @@ import "forge-std/console.sol";
 /// @dev Implements the IJobHelper interface for basic encoding and decoding of job data.
 ///
 contract SimpleJobHelper is IJobHelper {
-  uint256 internal constant BLOCK_CONTEXT_LENGTH = 60;
-  uint256 internal constant jobType = 1; 
+    uint256 internal constant BLOCK_CONTEXT_LENGTH = 60;
+    uint256 internal constant jobType = 1;
 
-  /// @dev Encodes job parameters into a single bytes string.,
-  /// decode input chunk data and generate a cryptographic commitment.
-  /// @inheritdoc IJobHelper
-  function encodeJobData(
-    uint256 _jobType,
-    bytes calldata inputData
-  ) external  override returns (bytes memory outputData) {
-    uint256 chunkPtr;
-    uint256 dataPtr;
-    uint256 blockPtr;
-    uint256 startDataPtr;
-
-    // copy Chunk to memory.
-    assembly {
-      chunkPtr := mload(0x40)
-      calldatacopy(chunkPtr, inputData.offset, inputData.length)
-      mstore(0x40, add(chunkPtr, inputData.length))
-      blockPtr := add(chunkPtr, 1) // skip numBlocks
-      startDataPtr := chunkPtr
-    }
-    uint256 _numBlocks = validateChunkLength(chunkPtr, inputData.length);
-
-    // concatenate block contexts, use scope to avoid stack too deep
+    /// @dev Encodes job parameters into a single bytes string.,
+    /// decode input chunk data and generate a cryptographic commitment.
+    /// @inheritdoc IJobHelper
+    function encodeJobData(uint256 _jobType, bytes calldata inputData)
+        external
+        override
+        returns (bytes memory outputData)
     {
-      uint256 _totalTransactionsInChunk;
-      for (uint256 i = 0; i < _numBlocks; i++) {
-        dataPtr = copyBlockContext(chunkPtr, dataPtr, i);
-        uint256 _numTransactionsInBlock = numTransactions(blockPtr);
-        unchecked {
-          _totalTransactionsInChunk += _numTransactionsInBlock;
-          blockPtr += BLOCK_CONTEXT_LENGTH;
-        }
-      }
-      assembly {
-        mstore(0x40, add(dataPtr, mul(_totalTransactionsInChunk, 0x20))) // reserve memory for tx hashes
-      }
-    }
+        uint256 chunkPtr;
+        uint256 dataPtr;
+        uint256 blockPtr;
+        uint256 startDataPtr;
 
-
-    // concatenate tx hashes
-    uint256 _l2TxPtr = l2TxPtr(chunkPtr, _numBlocks);
-    while (_numBlocks > 0) {
-      // concatenate l1 message hashes
-      uint256 _numL1MessagesInBlock = numL1Messages(blockPtr);
-
-      // concatenate l2 transaction hashes
-      uint256 _numTransactionsInBlock = numTransactions(blockPtr);
-      require(_numTransactionsInBlock >= _numL1MessagesInBlock, "num txs less than num L1 msgs");
-      for (uint256 j = _numL1MessagesInBlock; j < _numTransactionsInBlock; j++) {
-        bytes32 txHash;
-        (txHash, _l2TxPtr) = loadL2TxHash(_l2TxPtr);
+        // copy Chunk to memory.
         assembly {
-          mstore(dataPtr, txHash)
-          dataPtr := add(dataPtr, 0x20)
+            chunkPtr := mload(0x40)
+            calldatacopy(chunkPtr, inputData.offset, inputData.length)
+            mstore(0x40, add(chunkPtr, inputData.length))
+            blockPtr := add(chunkPtr, 1) // skip numBlocks
+            startDataPtr := chunkPtr
         }
-      }
-  
-      unchecked {
-        _numBlocks -= 1;
-        blockPtr += BLOCK_CONTEXT_LENGTH;
-      }
+        uint256 _numBlocks = validateChunkLength(chunkPtr, inputData.length);
+
+        // concatenate block contexts, use scope to avoid stack too deep
+        {
+            uint256 _totalTransactionsInChunk;
+            for (uint256 i = 0; i < _numBlocks; i++) {
+                dataPtr = copyBlockContext(chunkPtr, dataPtr, i);
+                uint256 _numTransactionsInBlock = numTransactions(blockPtr);
+                unchecked {
+                    _totalTransactionsInChunk += _numTransactionsInBlock;
+                    blockPtr += BLOCK_CONTEXT_LENGTH;
+                }
+            }
+            assembly {
+                mstore(0x40, add(dataPtr, mul(_totalTransactionsInChunk, 0x20))) // reserve memory for tx hashes
+            }
+        }
+
+        // concatenate tx hashes
+        uint256 _l2TxPtr = l2TxPtr(chunkPtr, _numBlocks);
+        while (_numBlocks > 0) {
+            // concatenate l1 message hashes
+            uint256 _numL1MessagesInBlock = numL1Messages(blockPtr);
+
+            // concatenate l2 transaction hashes
+            uint256 _numTransactionsInBlock = numTransactions(blockPtr);
+            require(_numTransactionsInBlock >= _numL1MessagesInBlock, "num txs less than num L1 msgs");
+            for (uint256 j = _numL1MessagesInBlock; j < _numTransactionsInBlock; j++) {
+                bytes32 txHash;
+                (txHash, _l2TxPtr) = loadL2TxHash(_l2TxPtr);
+                assembly {
+                    mstore(dataPtr, txHash)
+                    dataPtr := add(dataPtr, 0x20)
+                }
+            }
+
+            unchecked {
+                _numBlocks -= 1;
+                blockPtr += BLOCK_CONTEXT_LENGTH;
+            }
+        }
+
+        // compute data hash and store to memory
+        bytes32 res;
+        assembly {
+            outputData := mload(0x40)
+            mstore(outputData, 0x20)
+            res := keccak256(startDataPtr, add(chunkPtr, inputData.length))
+            mstore(add(outputData, 0x20), res)
+            mstore(0x40, add(outputData, 0x40))
+        }
+
+        return outputData;
     }
 
-    // compute data hash and store to memory
-    bytes32 res;
-    assembly {
-      outputData := mload(0x40)
-      mstore(outputData, 0x20)
-      res := keccak256(startDataPtr, add(chunkPtr, inputData.length))
-      mstore(add(outputData, 0x20), res)
-      mstore(0x40, add(outputData, 0x40))
+    /// @dev Decodes the job data bytes string back into its original parameters.
+    /// @inheritdoc IJobHelper
+    function decodeJobData(bytes calldata jobData)
+        external
+        pure
+        override
+        returns (uint256 jobType, string memory jobDetails)
+    {
+        // The jobDetails are expected to be a string, so we need to decode accordingly.
+        (jobType, jobDetails) = abi.decode(jobData, (uint256, string));
     }
 
-    return outputData;
-  }
+    /// @notice Validate the length of chunk.
+    /// @param chunkPtr The start memory offset of the chunk in memory.
+    /// @param _length The length of the chunk.
+    /// @return _numBlocks The number of blocks in current chunk.
+    function validateChunkLength(uint256 chunkPtr, uint256 _length) internal pure returns (uint256 _numBlocks) {
+        _numBlocks = numBlocks(chunkPtr);
 
-  /// @dev Decodes the job data bytes string back into its original parameters.
-  /// @inheritdoc IJobHelper
-  function decodeJobData(
-    bytes calldata jobData
-  ) external pure override returns (uint256 jobType, string memory jobDetails) {
-    // The jobDetails are expected to be a string, so we need to decode accordingly.
-    (jobType, jobDetails) = abi.decode(jobData, (uint256, string));
-  }
+        // should contain at least one block
+        require(_numBlocks > 0, "no block in chunk");
 
-  /// @notice Validate the length of chunk.
-  /// @param chunkPtr The start memory offset of the chunk in memory.
-  /// @param _length The length of the chunk.
-  /// @return _numBlocks The number of blocks in current chunk.
-  function validateChunkLength(uint256 chunkPtr, uint256 _length) internal pure returns (uint256 _numBlocks) {
-    _numBlocks = numBlocks(chunkPtr);
-
-    // should contain at least one block
-    require(_numBlocks > 0, "no block in chunk");
-
-    // should contain at least the number of the blocks and block contexts
-    require(_length >= 1 + _numBlocks * BLOCK_CONTEXT_LENGTH, "invalid chunk length");
-  }
-
-  /// @notice Return the start memory offset of `l2Transactions`.
-  /// @dev The caller should make sure `_numBlocks` is correct.
-  /// @param chunkPtr The start memory offset of the chunk in memory.
-  /// @param _numBlocks The number of blocks in current chunk.
-  /// @return _l2TxPtr the start memory offset of `l2Transactions`.
-  function l2TxPtr(uint256 chunkPtr, uint256 _numBlocks) internal pure returns (uint256 _l2TxPtr) {
-    unchecked {
-      _l2TxPtr = chunkPtr + 1 + _numBlocks * BLOCK_CONTEXT_LENGTH;
-    }
-  }
-
-  /// @notice Return the number of blocks in current chunk.
-  /// @param chunkPtr The start memory offset of the chunk in memory.
-  /// @return _numBlocks The number of blocks in current chunk.
-  function numBlocks(uint256 chunkPtr) internal pure returns (uint256 _numBlocks) {
-    assembly {
-      _numBlocks := shr(248, mload(chunkPtr))
-    }
-  }
-
-  /// @notice Copy the block context to another memory.
-  /// @param chunkPtr The start memory offset of the chunk in memory.
-  /// @param dstPtr The destination memory offset to store the block context.
-  /// @param index The index of block context to copy.
-  /// @return uint256 The new destination memory offset after copy.
-  function copyBlockContext(uint256 chunkPtr, uint256 dstPtr, uint256 index) internal pure returns (uint256) {
-    // only first 58 bytes is needed.
-    assembly {
-      chunkPtr := add(chunkPtr, add(1, mul(BLOCK_CONTEXT_LENGTH, index)))
-      mstore(dstPtr, mload(chunkPtr)) // first 32 bytes
-      mstore(
-        add(dstPtr, 0x20),
-        and(mload(add(chunkPtr, 0x20)), 0xffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000)
-      ) // next 26 bytes
-
-      dstPtr := add(dstPtr, 58)
+        // should contain at least the number of the blocks and block contexts
+        require(_length >= 1 + _numBlocks * BLOCK_CONTEXT_LENGTH, "invalid chunk length");
     }
 
-    return dstPtr;
-  }
-
-  /// @notice Return the number of transactions in current block.
-  /// @param blockPtr The start memory offset of the block context in memory.
-  /// @return _numTransactions The number of transactions in current block.
-  function numTransactions(uint256 blockPtr) internal pure returns (uint256 _numTransactions) {
-    assembly {
-      _numTransactions := shr(240, mload(add(blockPtr, 56)))
-    }
-  }
-
-  /// @notice Return the number of L1 messages in current block.
-  /// @param blockPtr The start memory offset of the block context in memory.
-  /// @return _numL1Messages The number of L1 messages in current block.
-  function numL1Messages(uint256 blockPtr) internal pure returns (uint256 _numL1Messages) {
-    assembly {
-      _numL1Messages := shr(240, mload(add(blockPtr, 58)))
-    }
-  }
-
-  /// @notice Compute and load the transaction hash.
-  /// @param _l2TxPtr The start memory offset of the transaction in memory.
-  /// @return bytes32 The transaction hash of the transaction.
-  /// @return uint256 The start memory offset of the next transaction in memory.
-  function loadL2TxHash(uint256 _l2TxPtr) internal pure returns (bytes32, uint256) {
-    bytes32 txHash;
-    assembly {
-      // first 4 bytes indicate the length
-      let txPayloadLength := shr(224, mload(_l2TxPtr))
-      _l2TxPtr := add(_l2TxPtr, 4)
-      txHash := keccak256(_l2TxPtr, txPayloadLength)
-      _l2TxPtr := add(_l2TxPtr, txPayloadLength)
+    /// @notice Return the start memory offset of `l2Transactions`.
+    /// @dev The caller should make sure `_numBlocks` is correct.
+    /// @param chunkPtr The start memory offset of the chunk in memory.
+    /// @param _numBlocks The number of blocks in current chunk.
+    /// @return _l2TxPtr the start memory offset of `l2Transactions`.
+    function l2TxPtr(uint256 chunkPtr, uint256 _numBlocks) internal pure returns (uint256 _l2TxPtr) {
+        unchecked {
+            _l2TxPtr = chunkPtr + 1 + _numBlocks * BLOCK_CONTEXT_LENGTH;
+        }
     }
 
-    return (txHash, _l2TxPtr);
-  }
+    /// @notice Return the number of blocks in current chunk.
+    /// @param chunkPtr The start memory offset of the chunk in memory.
+    /// @return _numBlocks The number of blocks in current chunk.
+    function numBlocks(uint256 chunkPtr) internal pure returns (uint256 _numBlocks) {
+        assembly {
+            _numBlocks := shr(248, mload(chunkPtr))
+        }
+    }
+
+    /// @notice Copy the block context to another memory.
+    /// @param chunkPtr The start memory offset of the chunk in memory.
+    /// @param dstPtr The destination memory offset to store the block context.
+    /// @param index The index of block context to copy.
+    /// @return uint256 The new destination memory offset after copy.
+    function copyBlockContext(uint256 chunkPtr, uint256 dstPtr, uint256 index) internal pure returns (uint256) {
+        // only first 58 bytes is needed.
+        assembly {
+            chunkPtr := add(chunkPtr, add(1, mul(BLOCK_CONTEXT_LENGTH, index)))
+            mstore(dstPtr, mload(chunkPtr)) // first 32 bytes
+            mstore(
+                add(dstPtr, 0x20),
+                and(mload(add(chunkPtr, 0x20)), 0xffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000)
+            ) // next 26 bytes
+
+            dstPtr := add(dstPtr, 58)
+        }
+
+        return dstPtr;
+    }
+
+    /// @notice Return the number of transactions in current block.
+    /// @param blockPtr The start memory offset of the block context in memory.
+    /// @return _numTransactions The number of transactions in current block.
+    function numTransactions(uint256 blockPtr) internal pure returns (uint256 _numTransactions) {
+        assembly {
+            _numTransactions := shr(240, mload(add(blockPtr, 56)))
+        }
+    }
+
+    /// @notice Return the number of L1 messages in current block.
+    /// @param blockPtr The start memory offset of the block context in memory.
+    /// @return _numL1Messages The number of L1 messages in current block.
+    function numL1Messages(uint256 blockPtr) internal pure returns (uint256 _numL1Messages) {
+        assembly {
+            _numL1Messages := shr(240, mload(add(blockPtr, 58)))
+        }
+    }
+
+    /// @notice Compute and load the transaction hash.
+    /// @param _l2TxPtr The start memory offset of the transaction in memory.
+    /// @return bytes32 The transaction hash of the transaction.
+    /// @return uint256 The start memory offset of the next transaction in memory.
+    function loadL2TxHash(uint256 _l2TxPtr) internal pure returns (bytes32, uint256) {
+        bytes32 txHash;
+        assembly {
+            // first 4 bytes indicate the length
+            let txPayloadLength := shr(224, mload(_l2TxPtr))
+            _l2TxPtr := add(_l2TxPtr, 4)
+            txHash := keccak256(_l2TxPtr, txPayloadLength)
+            _l2TxPtr := add(_l2TxPtr, txPayloadLength)
+        }
+
+        return (txHash, _l2TxPtr);
+    }
 }
