@@ -11,6 +11,8 @@ contract SubscriptionManager is Ownable {
 
     // Mapping from job type to its price in wei
     mapping(uint256 => uint256) public jobPrices;
+    mapping(bytes32 => uint256) public jobPayments;
+
 
     /// @dev Initializes the contract with the address of the JobContract and default job prices.
     /// @param jobContractAddress The address of the related JobContract.
@@ -42,8 +44,20 @@ contract SubscriptionManager is Ownable {
 
         //Assume we just allow user initiate off-chain compute tasks once per block
         bytes32 jobId = keccak256(abi.encode(msg.sender, jobType, block.number));
-
+        //TODO: should store jobId and payment in SubscriptionManager
+        jobPayments[jobId] = price;
         jobManager.createJob(jobId, taskDescription, jobType, inputData, expiration);
+    }
+
+    /// @dev Withdraws accumulated payments to job requester.
+    function withdrawRefund(bytes32 jobId) external {
+        bool ifRefundable = jobManager.isRefundable(jobId, msg.sender);
+        require(ifRefundable, "can not refund");
+        //TODO: optimize gas  here
+        uint256 refund = jobPayments[jobId];
+        jobPayments[jobId] = 0;
+        (bool success,) = payable(msg.sender).call{value: refund}("");
+        require(success, "Transfer failed.");
     }
 
     /// @dev Withdraws accumulated payments from job requests to the owner's address.
