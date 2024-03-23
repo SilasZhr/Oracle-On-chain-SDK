@@ -1,6 +1,6 @@
 # Oracle-On-chain-SDK
 
-
+Oracle-On-chain-SDK is a suite of smart contracts to bridge on-chain activities with off-chain compute workloads, leveraging Ethereum and Solidity. This involves managing subscriptions, encoding and decoding data for compute tasks, and ensuring secure, efficient communication between the blockchain and external compute resources.
 ## For Users
 To fully test this projetc, you will need to foundry and yarn
 First, clone the repository and run the fowllowing command
@@ -35,5 +35,5 @@ yarn test
     - [SubscriptionManager](contracts/src/SubscriptionManager.sol/contract.SubscriptionManager.md)
 
 ## Use case
-### case1 : TEE-Based Layer2 with Offchain Proof Computation
+#### TEE-Based Layer2 with Offchain Proof Computation
 you can find detail [here](./docs/cases.md)
