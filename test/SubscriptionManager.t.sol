@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../src/interfaces/ISubscriptionManager.sol";
-import {IJobSpecification} from "../src/interfaces/IJob.sol";
-import {JobSpecification} from "../src/Job.sol"; // Adjust the path to where your contract is
-import {SubscriptionManager} from "../src/SubscriptionManager.sol"; // Adjust the path to where your contract is
+import "contracts/src/interfaces/ISubscriptionManager.sol";
+import {IJobSpecification} from "contracts/src/interfaces/IJob.sol";
+import {JobSpecification} from "contracts/src/Job.sol"; // Adjust the path to where your contract is
+import {SubscriptionManager} from "contracts/src/SubscriptionManager.sol"; // Adjust the path to where your contract is
 
 
 contract SubscriptionManagerTest is Test {

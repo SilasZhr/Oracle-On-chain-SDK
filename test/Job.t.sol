@@ -2,8 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import {JobSpecification} from "../src/Job.sol"; // Adjust the path to where your contract is
-import {IJobSpecification} from "../src/interfaces/IJob.sol";
+import {JobSpecification} from "../contracts/src/Job.sol"; // Adjust the path to where your contract is
+import {IJobSpecification} from "../contracts/src/interfaces/IJob.sol";
 
 contract JobSpecificationTest is Test {
     JobSpecification jobManager;

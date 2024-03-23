@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../src/SimpleJobHelper.sol";
+import "contracts/src/SimpleJobHelper.sol";
 
 contract SimpleJobHelperTest is Test {
     SimpleJobHelper simpleJobHelper;

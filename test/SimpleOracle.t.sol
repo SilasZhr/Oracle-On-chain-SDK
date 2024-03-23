@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../src/SimpleOracle.sol";
-import {JobSpecification} from "../src/Job.sol"; // Adjust the path to where your contract is
-import {IJobSpecification} from "../src/interfaces/IJob.sol";
+import "contracts/src/SimpleOracle.sol";
+import {JobSpecification} from "contracts/src/Job.sol"; // Adjust the path to where your contract is
+import {IJobSpecification} from "contracts/src/interfaces/IJob.sol";
 
 contract CustomOracleTest is Test {
     CustomOracle public oracle;
@@ -28,7 +28,10 @@ contract CustomOracleTest is Test {
         jobId = keccak256("test");
         bytes memory taskDescription = "Description for Job1";
         uint256 jobType = 1;
+        
         bytes memory inputData = "Signed by 0xSilas";
+        //bytes memory inputData = hex"01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000010000000001000000000100";
+        
         uint256 expiration = 1 days;
         jobManager.createJob(jobId, taskDescription, jobType, inputData, expiration);
 
