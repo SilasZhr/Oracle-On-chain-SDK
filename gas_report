@@ -1,0 +1,41 @@
+| contracts/src/Job.sol:JobSpecification contract |                 |        |        |        |         |
+|-------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                 | Deployment Size |        |        |        |         |
+| 1158620                                         | 6019            |        |        |        |         |
+| Function Name                                   | min             | avg    | median | max    | # calls |
+| completeJob                                     | 25703           | 25703  | 25703  | 25703  | 1       |
+| createJob                                       | 97729           | 112654 | 117629 | 117629 | 8       |
+| getJob                                          | 3320            | 3441   | 3441   | 3563   | 2       |
+| getJobCommitment                                | 16907           | 16907  | 16907  | 16907  | 2       |
+| setTrustedOracle                                | 24161           | 24161  | 24161  | 24161  | 5       |
+| trustedOracles                                  | 2564            | 2564   | 2564   | 2564   | 1       |
+
+
+| contracts/src/SimpleJobHelper.sol:SimpleJobHelper contract |                 |      |        |      |         |
+|------------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                            | Deployment Size |      |        |      |         |
+| 287124                                                     | 1466            |      |        |      |         |
+| Function Name                                              | min             | avg  | median | max  | # calls |
+| encodeJobData                                              | 1872            | 1872 | 1872   | 1872 | 1       |
+
+
+| contracts/src/SimpleOracle.sol:CustomOracle contract |                 |       |        |       |         |
+|------------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                      | Deployment Size |       |        |       |         |
+| 303916                                               | 1549            |       |        |       |         |
+| Function Name                                        | min             | avg   | median | max   | # calls |
+| verifySignature                                      | 28883           | 28883 | 28883  | 28883 | 2       |
+
+
+| contracts/src/SubscriptionManager.sol:SubscriptionManager contract |                 |        |        |        |         |
+|--------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                    | Deployment Size |        |        |        |         |
+| 624360                                                             | 2961            |        |        |        |         |
+| Function Name                                                      | min             | avg    | median | max    | # calls |
+| jobPrices                                                          | 461             | 461    | 461    | 461    | 3       |
+| requestJob                                                         | 126579          | 134279 | 134279 | 141979 | 4       |
+| setJobPrice                                                        | 2702            | 3559   | 2702   | 4702   | 7       |
+| withdrawPayments                                                   | 10416           | 10416  | 10416  | 10416  | 1       |
+
+
+
